@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherVision - Advanced Climate Prediction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            background: #000000;
+        }
+
+        #bgVideo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        #bgVideo.active {
+            opacity: 1;
+        }
+
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+            backdrop-filter: blur(2px);
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: slideDown 1s ease;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(40px);
+            padding: 25px 50px;
+            border-radius: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ffff, #00ff88, #00ffff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+            animation: gradientFlow 3s ease infinite;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: rgba(0, 255, 255, 0.7);
+            font-weight: 300;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .location-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 255, 136, 0.2));
+            padding: 15px 35px;
+            border-radius: 30px;
+            color: #00ffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .main-card {
+            background: rgba(10, 10, 30, 0.7);
+            backdrop-filter: blur(40px);
+            border-radius: 40px;
+            padding: 60px;
+            box-shadow: 0 30px 90px rgba(0, 255, 255, 0.2);
+            border: 2px solid rgba(0, 255, 255, 0.2);
+            animation: fadeInUp 1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(0, 255, 255, 0.1), transparent 70%);
+            pointer-events: none;
+        }
+
+        .main-card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ffff, #00ff88, #0088ff, #00ffff);
+            border-radius: 40px;
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(20px);
+            
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #00ffff;
+            margin-bottom: 40px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            position: relative;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .date-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .dropdown-wrapper {
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .dropdown-wrapper label {
+            display: block;
+            font-size: 0.9rem;
+            color: #00ffff;
+            margin-bottom: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .select-container {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+
+        .select-container:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        select {
+            width: 100%;
+            padding: 20px 24px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 20px;
+            background: rgba(0, 20, 40, 0.6);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            appearance: none;
+            color: #00ffff;
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        select:hover {
+            background: rgba(0, 40, 80, 0.8);
+            border-color: #00ffff;
+            box-shadow: 0 15px 40px rgba(0, 255, 255, 0.4), 0 0 20px rgba(0, 255, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 6px rgba(0, 255, 136, 0.2), 0 15px 40px rgba(0, 255, 255, 0.4);
+            background: rgba(0, 40, 80, 0.9);
+        }
+
+        select option {
+            background: #001a33;
+            color: #00ffff;
+            padding: 10px;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+            color: #00ffff;
+            filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5));
+        }
+
+        select:focus + .select-icon {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .weather-showcase {
+            margin-top: 50px;
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .weather-showcase::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveGrid 20s linear infinite;
+        }
+
+        .weather-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .weather-icon-large {
+            font-size: 8rem;
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+        }
+
+        .weather-title-main {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .weather-desc {
+            font-size: 1.4rem;
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.8;
+            max-width: 600px;
+            font-weight: 300;
+        }
+
+        .temp-display {
+            margin-top: 30px;
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .temp-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px 35px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .temp-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .temp-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+            75% {
+                transform: translateY(-10px) rotate(-5deg);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
+            }
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.8));
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 10px 40px rgba(0, 255, 255, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 10px 50px rgba(0, 255, 255, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        @keyframes gradientFlow {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes gradientRotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes moveGrid {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(50px, 50px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 15px;
+            }
+
+            .main-card {
+                padding: 40px 25px;
+                border-radius: 30px;
+            }
+
+            .date-selector {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .logo-text {
+                font-size: 1.4rem;
+            }
+
+            .weather-icon-large {
+                font-size: 5rem;
+            }
+
+            .weather-title-main {
+                font-size: 2.5rem;
+            }
+
+            .weather-showcase {
+                padding: 40px 20px;
+            }
+
+            .temp-display {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <video id="bgVideo" loop muted playsinline></video>
+    <div class="video-overlay"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">WEATHERVISION</span>
+            </div>
+            <div class="tagline">Next-Gen Climate Intelligence</div>
+            <div class="location-badge">
+                <span>📍</span>
+                <span>New York, USA</span>
+            </div>
+        </div>
+
+        <div class="main-card">
+            <h2 class="section-title">Select Prediction Date</h2>
+            
+            <div class="date-selector">
+                <div class="dropdown-wrapper">
+                    <label for="day">📅 Day</label>
+                    <div class="select-container">
+                        <select id="day">
+                            <option value="">Choose Day</option>
+                        </select>
+                        <span class="select-icon">▼</span>
+                    </div>
+                </div>
+                <div class="dropdown-wrapper">
+                    <label for="month">📆 Month</label>
+                    <div class="select-container">
+                        <select id="month">
+                            <option value="">Choose Month</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <span class="select-icon">▼</span>
+                    </div>
+                </div>
+                <div class="dropdown-wrapper">
+                    <label for="year">🗓️ Year</label>
+                    <div class="select-container">
+                        <select id="year">
+                            <option value="">Choose Year</option>
+                        </select>
+                        <span class="select-icon">▼</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="weather-showcase" id="weatherShowcase">
+                <div class="weather-content">
+                    <div class="weather-icon-large">🔮</div>
+                    <div class="weather-title-main">Ready to Predict</div>
+                    <div class="weather-desc">Select a date above to see the advanced weather prediction for New York City</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const daySelect = document.getElementById('day');
+        const monthSelect = document.getElementById('month');
+        const yearSelect = document.getElementById('year');
+        const weatherShowcase = document.getElementById('weatherShowcase');
+        const bgVideo = document.getElementById('bgVideo');
+
+        for (let i = 1; i <= 31; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            daySelect.appendChild(option);
+        }
+
+        const currentYear = new Date().getFullYear();
+        for (let i = currentYear; i <= 2055; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            yearSelect.appendChild(option);
+        }
+
+        const weatherConditions = [
+            {
+                type: 'cold',
+                icon: '❄️',
+                title: 'Very Cold',
+                description: 'Arctic conditions expected with temperatures well below freezing. Heavy snowfall likely.',
+                gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                videoSrc: 'cold.mp4',
+                temp: { high: '-5°C', low: '-15°C', feels: '-20°C' }
+            },
+            {
+                type: 'hot',
+                icon: '🔥',
+                title: 'Very Hot',
+                description: 'Extreme heat warning in effect. Stay indoors and keep hydrated throughout the day.',
+                gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                videoSrc: 'hot.mp4',
+                temp: { high: '42°C', low: '35°C', feels: '48°C' }
+            },
+            {
+                type: 'rainy',
+                icon: '⛈️',
+                title: 'Very Rainy',
+                description: 'Severe thunderstorms and heavy rainfall throughout the day. Flash flood warnings active.',
+                gradient: 'linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%)',
+                videoSrc: 'rainy.mp4',
+                temp: { high: '18°C', low: '12°C', feels: '15°C' }
+            },
+            {
+                type: 'uncomfortable',
+                icon: '🌫️',
+                title: 'Uncomfortable',
+                description: 'High humidity combined with pollution. Air quality poor. Limit outdoor activities.',
+                gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                videoSrc: 'uncomfortable.mp4',
+                temp: { high: '28°C', low: '22°C', feels: '35°C' }
+            }
+        ];
+
+        function updateWeather() {
+            const day = daySelect.value;
+            const month = monthSelect.value;
+            const year = yearSelect.value;
+
+            if (!day || !month || !year) return;
+
+            const randomWeather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+
+            weatherShowcase.style.background = randomWeather.gradient;
+            
+            bgVideo.src = randomWeather.videoSrc;
+            bgVideo.load();
+            bgVideo.play().then(() => {
+                bgVideo.classList.add('active');
+            }).catch(e => {
+                console.log('Video autoplay prevented');
+                bgVideo.classList.add('active');
+            });
+
+            weatherShowcase.innerHTML = `
+                <div class="weather-content">
+                    <div class="weather-icon-large">${randomWeather.icon}</div>
+                    <div class="weather-title-main">${randomWeather.title}</div>
+                    <div class="weather-desc">${randomWeather.description}</div>
+                    <div class="temp-display">
+                        <div class="temp-item">
+                            <div class="temp-label">High</div>
+                            <div class="temp-value">${randomWeather.temp.high}</div>
+                        </div>
+                        <div class="temp-item">
+                            <div class="temp-label">Low</div>
+                            <div class="temp-value">${randomWeather.temp.low}</div>
+                        </div>
+                        <div class="temp-item">
+                            <div class="temp-label">Feels Like</div>
+                            <div class="temp-value">${randomWeather.temp.feels}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            weatherShowcase.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                weatherShowcase.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        daySelect.addEventListener('change', updateWeather);
+        monthSelect.addEventListener('change', updateWeather);
+        yearSelect.addEventListener('change', updateWeather);
+    </script>
+</body>
+</html>
